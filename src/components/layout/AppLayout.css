@@ -1,0 +1,55 @@
+.app-root {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;         
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+
+.app-inner {
+  flex: 1;
+  background: #fff;
+  border-radius: 8px;
+}
+
+
+.top-row {
+  flex: 2;                   
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+/* 블록 편집 공간 */
+.edit-area {
+  flex: 3;
+  background: #e0e0e0;       
+  border-radius: 8px;
+  padding: 16px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* 블록 출력 공간 */
+.output-area {
+  flex: 2;
+  background: #e0e0e0;
+  border-radius: 8px;
+  padding: 16px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* 아래 블록 팔레트 공간 */
+.bottom-row {
+  flex: 1;
+  background: #f0f0f0;
+  border-radius: 8px;
+  padding: 12px 16px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
