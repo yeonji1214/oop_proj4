@@ -1,0 +1,73 @@
+.run-root {
+  width: 100%;
+  height: 100%;
+  background: #dcdcdc;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 10px;
+  gap: 8px;
+  box-sizing: border-box;
+}
+
+.run-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.run-button {
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  background: #ffffff;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+}
+
+.run-button.primary {
+  background: #4caf50;
+  color: white;
+}
+
+.run-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.run-only-console {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.run-console {
+  flex: 1;
+  background: #454545;
+  color: #f1f1f1;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  font-family: ui-monospace, Consolas, monospace;
+}
+
+.run-console-header {
+  padding: 6px 10px;
+  font-size: 12px;
+  border-bottom: 1px solid #454545;
+}
+
+.run-console-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+.run-console-empty {
+  opacity: 0.5;
+}
+
+.run-console-line + .run-console-line {
+  margin-top: 3px;
+}
