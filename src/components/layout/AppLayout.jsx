@@ -7,13 +7,13 @@ export function AppLayout({ editor, output, palette }) {
         <div className="edit-area">
           {editor}
         </div>
-        <div className="output-area">
-          {output}
+        <div className="bottom-row">
+          {palette}
         </div>
       </div>
 
-      <div className="bottom-row">
-        {palette}
+      <div className="output-area">
+        {output}
       </div>
     </div>
   );
