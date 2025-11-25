@@ -439,7 +439,7 @@ const App = () => {
     <BlockPalettePane onDragStart={handlePaletteDragStart} />
   );
 
-  const outputContent = <RunPane />;
+  const outputContent = <RunPane blocks={blocks} />;
 
   return (
     <div
