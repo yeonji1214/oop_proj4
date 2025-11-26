@@ -7,6 +7,7 @@ export function BlockEditorPane({
   onBlockDown,
   hiddenIds = [],
   isOverTrash = false, // 휴지통 호버 상태
+  onBlockEdit,
 }) {
   return (
     <div
@@ -28,20 +29,18 @@ export function BlockEditorPane({
           return (
             <g key={block.id} style={{ opacity: isHidden ? 0 : 1 }}>
               <Block
-                id={block.id}
-                text={block.text}
-                color={block.color}
-                shape={block.shape}
-                x={block.x}
-                y={block.y}
+                {...block}
                 onMouseDown={onBlockDown}
+                
+                // ★ [NEW] Block에게 전달
+                onEdit={onBlockEdit} 
               />
             </g>
           );
         })}
       </svg>
 
-      {/* --- 휴지통 UI 시작 --- */}
+      {/* --- 휴지통 UI (기존 코드와 동일) --- */}
       <div
         style={{
           position: "absolute",
@@ -57,10 +56,9 @@ export function BlockEditorPane({
           alignItems: "center",
           transition: "all 0.2s ease",
           zIndex: 10,
-          pointerEvents: "none", // 마우스 이벤트가 아래 SVG 방해하지 않도록
+          pointerEvents: "none",
         }}
       >
-        {/* 간단한 휴지통 아이콘 SVG */}
         <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
           <path
             d="M3 6H5H21"
@@ -78,7 +76,6 @@ export function BlockEditorPane({
           />
         </svg>
       </div>
-      {/* --- 휴지통 UI 끝 --- */}
     </div>
   );
 }
