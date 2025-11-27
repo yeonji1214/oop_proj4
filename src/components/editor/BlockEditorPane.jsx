@@ -8,6 +8,9 @@ export function BlockEditorPane({
   hiddenIds = [],
   isOverTrash = false, // 휴지통 호버 상태
   onBlockEdit,
+  
+  variables = [], 
+  onVarChange,
 }) {
   return (
     <div
@@ -31,9 +34,11 @@ export function BlockEditorPane({
               <Block
                 {...block}
                 onMouseDown={onBlockDown}
+                onEdit={onBlockEdit}
                 
                 // ★ [NEW] Block에게 전달
-                onEdit={onBlockEdit} 
+                variables={variables}
+                onVarChange={onVarChange}
               />
             </g>
           );

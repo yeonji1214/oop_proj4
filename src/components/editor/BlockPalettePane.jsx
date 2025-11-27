@@ -1,12 +1,11 @@
 import React, { useState } from "react";
 import Block from "./Block";
 
-export function BlockPalettePane({ onDragStart }) {
-  const [selectedCategory, setSelectedCategory] = useState("control"); // 테스트 위해 control 기본 선택
+export function BlockPalettePane({ onDragStart, variables = [], onCreateVariable }) {
+  const [selectedCategory, setSelectedCategory] = useState("var"); // 테스트 위해 control 기본 선택
 
   const categories = [
     { id: "event",     label: "이벤트", color: "#00B400" },
-    { id: "motion",    label: "동작",   color: "#3399FF" },
     { id: "control",   label: "제어",   color: "#8C68CD" },
     { id: "condition", label: "조건",   color: "#5CB1D6" },
     { id: "calc",      label: "연산",   color: "#4CBFE6" },
@@ -14,13 +13,9 @@ export function BlockPalettePane({ onDragStart }) {
     { id: "var",       label: "변수",   color: "#FF8C1A" },
   ];
 
-  const allBlocks = [
+  const staticBlocks = [
     // [이벤트]
     { id: 1, category: "event", text: "깃발 클릭했을 때", color: "#00B400", shape: "command" },
-    
-    // [동작]
-    { id: 2, category: "motion", text: "10만큼 이동", color: "#3399FF", shape: "command" },
-    { id: 3, category: "motion", text: "오른쪽 회전", color: "#3399FF", shape: "command" },
     
     // [제어] (새로 만든 블록들)
     { id: 4, category: "control", text: "10",       color: "#8C68CD", shape: "command-repeat" }, 
@@ -50,11 +45,21 @@ export function BlockPalettePane({ onDragStart }) {
     
     // [변수]
     { id: 20, category: "var", text: "내 변수", color: "#FF8C1A", shape: "value-pill" },
-    { id: 22, category: "var", text: "0", color: "#FF8C1A", shape: "value-input" },
+    { id: 21, category: "var", text: "set", subText: "to", color: "#FF8C1A", shape: "variable-set" },
+    { id: 22, category: "var", text: "change", subText: "by", color: "#FF8C1A", shape: "variable-set" },
+    { id: 25, category: "var", text: "0", color: "#FF8C1A", shape: "value-input" },
   ];
 
-  const filteredBlocks = allBlocks.filter((b) => b.category === selectedCategory);
+  const variableBlocks = variables.map((varName, index) => ({
+    id: `var-${index}`, // 고유 ID
+    category: "var",
+    text: varName,      // 변수 이름
+    color: "#FF8C1A",
+    shape: "value-pill" // 알약 모양
+  }));
+  const allBlocks = [...staticBlocks, ...variableBlocks];
 
+  const filteredBlocks = allBlocks.filter((b) => b.category === selectedCategory);
   // ----------------------------------------------------------------
   // [계산 로직] 각 블록의 높이와 너비를 미리 계산하여 Y좌표를 누적합니다.
   // ----------------------------------------------------------------
@@ -149,6 +154,28 @@ export function BlockPalettePane({ onDragStart }) {
         extraProps = { slotWidth: 30 };
         break;
       }
+      case "variable-set": {
+        const label1W = block.text.length * 12;
+        const label2W = (block.subText || "").length * 12;
+        
+        // ★ [수정] 90 -> 100으로 변경 (Block.jsx와 통일)
+        // 15(여백) + 텍스트1 + 10 + 드롭다운(100) + 10 + 텍스트2 + 10 + 슬롯(30) + 15(여백)
+        width = 15 + label1W + 10 + 80 + 10 + label2W + 10 + 30 + 15;
+        
+        height = 40;
+        extraProps = { slotWidth: 30 };
+        break;
+      }
+
+      case "variable-show": {
+        const labelW = block.text.length * 12;
+        
+        // ★ [수정] 90 -> 100으로 변경
+        width = 15 + labelW + 10 + 80 + 15;
+        
+        height = 40;
+        break;
+      }
       default: { // command
         width = textWidth + 40;
         height = 40;
@@ -222,7 +249,27 @@ export function BlockPalettePane({ onDragStart }) {
           </button>
         ))}
       </div>
-
+      {/* ★ [NEW] 변수 탭일 때만 "Make a Variable" 버튼 표시 */}
+      {selectedCategory === "var" && (
+        <div style={{ padding: "10px 15px", background: "#fff" }}>
+          <button 
+            onClick={onCreateVariable}
+            style={{
+              width: "100%",
+              padding: "10px",
+              background: "#eee",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+              color: "#333",
+              fontWeight: "bold",
+              cursor: "pointer",
+              fontSize: "13px"
+            }}
+          >
+            Make a Variable
+          </button>
+        </div>
+      )}
       {/* 블록 리스트 */}
       <div style={{ flex: 1, overflowY: "auto", position: "relative" }}>
         {/* SVG 전체 높이를 누적된 Y만큼 설정 */}

@@ -200,7 +200,18 @@ const getLayoutInfo = (block, allBlocks) => {
       rightSlotWidth: rightInfo.width,
     };
   }
+  if (block.shape === "variable-set") {
+     const valueChild = allBlocks.find(b => b.parentId === block.id && b.parentSlot === "value");
+     const slotWidth = valueChild ? getLayoutInfo(valueChild, allBlocks).width : 30;
 
+     const label1W = (block.text || "set").length * 12;
+     const label2W = (block.subText || "").length * 12;
+     
+     // ★ [공식 통일]
+     const totalWidth = 15 + label1W + 10 + 100 + 10 + label2W + 10 + slotWidth + 15;
+
+     return { width: totalWidth, height: 40, slotWidth };
+  }
   // ====================================================
   // [수정] 단항 조건 (NOT) - 높이 계산 추가
   // ====================================================
@@ -280,7 +291,7 @@ const calculateDisplayPositions = (blocks) => {
        const timesChild = blocksWithSize.find(b => b.parentId === block.id && b.parentSlot === "times");
        if (timesChild) {
          // 타원형 슬롯 위치: x=15, y=10
-         updatePosition(timesChild.id, absX + 15, absY + 10); 
+         updatePosition(timesChild.id, absX + 15, absY + 5); 
        }
     }
     // 2. 조건/IF (while, if, if-else)
@@ -336,13 +347,19 @@ const calculateDisplayPositions = (blocks) => {
        const textW = (block.text || "").length * 12;
        const leftSlotW = block.layout?.leftSlotWidth || 30;
        const rightSlotW = block.layout?.rightSlotWidth || 30;
+       
+       const myHeight = block.layout?.height || 30;
+       
+       // ★ [핵심 수정] (높이/2) - 15
+       const childYOffset = (myHeight / 2) - 15;
 
        // 왼쪽 자식
        const leftChild = blocksWithSize.find(b => b.parentId === block.id && b.parentSlot === "left");
        if (leftChild) {
          const childW = leftChild.layout?.width || 30;
          const offsetX = 15 + (leftSlotW - childW)/2;
-         updatePosition(leftChild.id, absX + offsetX, absY - 4);
+         
+         updatePosition(leftChild.id, absX + offsetX, absY + childYOffset);
        }
        // 오른쪽 자식
        const rightChild = blocksWithSize.find(b => b.parentId === block.id && b.parentSlot === "right");
@@ -350,21 +367,41 @@ const calculateDisplayPositions = (blocks) => {
          const childW = rightChild.layout?.width || 30;
          const startX = 15 + leftSlotW + 10 + textW + 10;
          const offsetX = startX + (rightSlotW - childW)/2;
-         updatePosition(rightChild.id, absX + offsetX, absY - 4);
+         
+         updatePosition(rightChild.id, absX + offsetX, absY + childYOffset);
        }
     }
 
-    // [NEW] NOT 블록 배치
+    // [수정] NOT 블록 배치 (boolean-not) - 중앙 정렬 보정
     if (block.shape === "boolean-not") {
        const child = blocksWithSize.find(b => b.parentId === block.id && b.parentSlot === "condition");
        if (child) {
+         const myHeight = block.layout?.height || 30;
+         
+         // ★ [핵심 수정] (높이/2) - 15
+         const childYOffset = (myHeight / 2) - 15;
+         
          const textW = (block.text || "").length * 12;
          const slotW = block.layout?.slotWidth || 30;
          const childW = child.layout?.width || 30;
          
          const startX = 15 + textW + 10;
          const offsetX = startX + (slotW - childW)/2;
-         updatePosition(child.id, absX + offsetX, absY + 5);
+         
+         updatePosition(child.id, absX + offsetX, absY + childYOffset);
+       }
+    }
+    if (block.shape === "variable-set") {
+       const valueChild = blocksWithSize.find(b => b.parentId === block.id && b.parentSlot === "value");
+       if (valueChild) {
+           const label1W = (block.text || "set").length * 12;
+           const label2W = (block.subText || "").length * 12;
+           
+           // 구멍 위치 계산
+           const slotX = 15 + label1W + 10 + 100 + 10 + label2W + 10;
+           
+           // ★ absY + 5 (흰색 구멍은 y=5 위치이므로)
+           updatePosition(valueChild.id, absX + slotX, absY);
        }
     }
     // ------------------------------------------------
@@ -400,7 +437,18 @@ const App = () => {
   const [dragInfo, setDragInfo] = useState(null);
   const [isOverTrash, setIsOverTrash] = useState(false);
   const editorRef = useRef(null);
-
+  const [variables, setVariables] = useState(["my variable"]);
+  const handleCreateVariable = () => {
+    const name = window.prompt("새 변수 이름:");
+    if (name && !variables.includes(name)) {
+      setVariables((prev) => [...prev, name]);
+    }
+  };
+  const handleBlockVarChange = (id, newVarName) => {
+    setBlocks((prev) =>
+      prev.map((b) => (b.id === id ? { ...b, selectedVar: newVarName } : b))
+    );
+  };
   // -----------------------------
   // [헬퍼] 자손 블록 찾기
   // -----------------------------
@@ -427,7 +475,7 @@ const App = () => {
       );
     }
   };
-
+  
   // -----------------------------
   // [A] 팔레트 드래그 시작
   // -----------------------------
@@ -739,7 +787,33 @@ const App = () => {
                 bestCandidate = { block: other, slot: "value" };
             }
         }
+        if (other.shape === "variable-set") {
+            // 1. 이미 차 있는지 확인
+            const isFull = blocks.some(b => 
+                b.parentId === other.id && b.parentSlot === "value" && b.id !== dragInfo.id
+            );
+            
+            // 2. 구멍의 정확한 X 좌표 계산 (공식 적용)
+            const label1W = (other.text || "set").length * 12;
+            const label2W = (other.subText || "").length * 12;
+            
+            // 구멍 시작점(X) = 15 + 텍스트1 + 10 + 드롭다운(100) + 10 + 텍스트2 + 10
+            const slotStartX = 15 + label1W + 10 + 100 + 10 + label2W + 10;
+            
+            // 구멍 중심점 (구멍크기 30 기준, 반지름 15 더함)
+            const slotCenterX = other.x + slotStartX + 15;
+            const slotCenterY = other.y + 20; // 높이 40의 중간
+
+            // 3. 거리 측정
+            const dist = Math.hypot(slotCenterX - mouseX, slotCenterY - mouseY);
+            
+            if (dist < minDistance && !isFull) {
+                minDistance = dist;
+                bestCandidate = { block: other, slot: "value" };
+            }
+        }
       });
+      
 
       if (bestCandidate) {
         const target = bestCandidate.block;
@@ -838,6 +912,7 @@ const App = () => {
         finalY = target.y;
       }
     }
+    
     
     // ★★★ [여기서부터 새로 추가/변경된 부분] ★★★
     
@@ -1033,17 +1108,23 @@ const App = () => {
         blocks={blocksToRender}
         hiddenIds={hiddenIds}
         onBlockDown={handleWorkspaceBlockDown}
-        
-        // ★ [NEW] 편집 함수 전달
-        onBlockEdit={handleBlockEdit} 
-        
+        onBlockEdit={handleBlockEdit}
         isOverTrash={isOverTrash}
+        
+        // ★ [NEW] 변수 목록과 변경 함수 전달
+        variables={variables}
+        onVarChange={handleBlockVarChange}
       />
     </div>
   );
 
   const paletteContent = (
-    <BlockPalettePane onDragStart={handlePaletteDragStart} />
+    <BlockPalettePane 
+      onDragStart={handlePaletteDragStart} 
+      // ★ [NEW] props 전달
+      variables={variables}
+      onCreateVariable={handleCreateVariable}
+    />
   );
 
   const outputContent = <RunPane blocks={blocks} />;

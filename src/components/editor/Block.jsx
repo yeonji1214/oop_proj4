@@ -8,13 +8,17 @@ const Block = ({
   x = 0,
   y = 0,
   onMouseDown,
-  
+  variables = [], // 변수 목록 (예: ["my variable", "score"])
+  onVarChange,    // 변경 함수
+
   // --- [레이아웃 관련 Props] ---
   // 부모(App.jsx)에서 계산된 크기 정보를 받아옵니다.
   totalWidth,      // 블록의 전체 너비
   slotWidth = 100, // "만약" 블록의 육각형 슬롯 너비
   height,
   onEdit,
+  subText,
+  selectedVar,
   
   // 연산자 블록용 자식 슬롯 너비
   leftSlotWidth = 30,  
@@ -33,6 +37,63 @@ const Block = ({
   const defaultHeight = 40;
 
   const renderShape = () => {
+    const renderDropdown = (x, y, w, currentVal) => {
+      // label이 없으면 기본값 표시
+      const displayLabel = currentVal || "my variable";
+      
+      return (
+        <g>
+          {/* 드롭다운 배경 */}
+          <rect
+            x={x} y={y} width={w} height={30}
+            rx={4} ry={4}
+            fill="#E67E22" 
+            stroke="#CF711F"
+            strokeWidth="1"
+          />
+          {/* 변수 이름 텍스트 */}
+          <text
+            x={x + 10} y={y + 20}
+            fill="white" fontSize="12px" fontWeight="bold"
+            style={{ pointerEvents: "none" }}
+          >
+            {displayLabel}
+          </text>
+          {/* 화살표 (▼) */}
+          <path
+            d={`M ${x + w - 18} ${y + 12} l 4 0 l -2 4 z`}
+            fill="white"
+          />
+          <foreignObject x={x} y={y} width={w} height={30}>
+            <select
+              value={displayLabel}
+              onChange={(e) => {
+                // 선택하면 부모에게 알림
+                if (onVarChange) onVarChange(id, e.target.value);
+              }}
+              style={{
+                width: "100%",
+                height: "100%",
+                opacity: 0, // ★ 투명하게 만들어서 주황색 박스 위에 덮어씌움
+                cursor: "pointer",
+                border: "none",
+              }}
+            >
+              {/* 변수 목록으로 옵션 생성 */}
+              {variables.length > 0 ? (
+                variables.map((v) => (
+                  <option key={v} value={v}>
+                    {v}
+                  </option>
+                ))
+              ) : (
+                <option value="my variable">my variable</option>
+              )}
+            </select>
+          </foreignObject>
+        </g>
+      );
+    };
     switch (shape) {
       
       // ============================================================
@@ -290,6 +351,96 @@ const Block = ({
             <text x={rightX} y={textY} fill="white" fontSize="14px" fontWeight="bold" textAnchor="start" style={{ pointerEvents: "none" }}>
               {rightLabel}
             </text>
+          </g>
+        );
+      }
+      case "variable-set": {
+        const currentSlotWidth = slotWidth || 30;
+        
+        // 1. 텍스트 너비 계산
+        const label1 = text || "set";
+        const label1W = label1.length * 12;
+        
+        const label2 = subText || ""; 
+        const label2W = label2.length * 12;
+
+        // 2. 좌표 계산 (공식 통일)
+        const dropdownW = 100;
+        
+        // 드롭다운 위치 = 15 + 텍스트1 + 10
+        const dropdownX = 15 + label1W + 10;
+        
+        // 텍스트2 위치 = 드롭다운끝 + 10
+        const label2X = dropdownX + dropdownW + 10;
+        
+        // 슬롯 위치 = 텍스트2끝 + 10
+        const slotX = label2X + label2W + 10;
+        
+        // 전체 너비 = 슬롯끝 + 15
+        // (App.jsx에서 totalWidth를 안 줬을 때를 대비한 자체 계산)
+        const calculatedWidth = slotX + currentSlotWidth + 15;
+        const totalW = totalWidth || calculatedWidth;
+
+        const pathData = `
+          M 0 4 a 4 4 0 0 1 4 -4 h 10 l 4 4 h 12 l 4 -4
+          h ${totalW - 34} a 4 4 0 0 1 4 4 v 32
+          a 4 4 0 0 1 -4 4 h -${totalW - 34} l -4 4 h -12
+          l -4 -4 h -10 a 4 4 0 0 1 -4 -4 Z
+        `;
+
+        return (
+          <g>
+            <path d={pathData} fill={color} stroke="#fff" strokeWidth="1" />
+            
+            <text x={15 + label1W/2} y={25} fill="white" fontSize="13px" fontWeight="bold" textAnchor="middle" style={{ pointerEvents: "none" }}>
+              {label1}
+            </text>
+
+            {/* 드롭다운 (100px) */}
+            {renderDropdown(dropdownX, 5, dropdownW, selectedVar)}
+
+            <text x={label2X + label2W/2} y={25} fill="white" fontSize="13px" fontWeight="bold" textAnchor="middle" style={{ pointerEvents: "none" }}>
+              {label2}
+            </text>
+
+            {/* 입력 슬롯 */}
+            <rect x={slotX} y={5} width={currentSlotWidth} height={30} rx={15} fill="white" />
+          </g>
+        );
+      }
+
+      // ============================================================
+      // [NEW] 변수 보이기/숨기기 블록 (show variable ...)
+      // ============================================================
+      case "variable-show": {
+        const label1 = text || "show variable";
+        const label1W = label1.length * 12;
+        
+        const dropdownW = 100;
+        const dropdownX = 15 + label1W + 10;
+        const totalW = totalWidth || (dropdownX + dropdownW + 15);
+
+        const pathData = `
+          M 0 4 a 4 4 0 0 1 4 -4 h 10 l 4 4 h 12 l 4 -4
+          h ${totalW - 34} a 4 4 0 0 1 4 4 v 32
+          a 4 4 0 0 1 -4 4 h -${totalW - 34} l -4 4 h -12
+          l -4 -4 h -10 a 4 4 0 0 1 -4 -4 Z
+        `;
+
+        return (
+          <g>
+            <path d={pathData} fill={color} stroke="#fff" strokeWidth="1" />
+            
+            <text 
+              x={15 + label1W/2} y={25} 
+              fill="white" fontSize="13px" fontWeight="bold" 
+              textAnchor="middle" style={{ pointerEvents: "none" }}
+            >
+              {label1}
+            </text>
+
+            {/* 변수 선택 드롭다운 */}
+            {renderDropdown(dropdownX, 5, dropdownW, selectedVar)}
           </g>
         );
       }
