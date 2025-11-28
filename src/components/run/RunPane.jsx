@@ -306,6 +306,28 @@ export function RunPane({ blocks = [] }) {
       pushLog(`✅ 컴파일 완료: statement ${nodes.length}개`);
       warnings.forEach((w) => pushLog(`⚠️ ${w}`));
 
+      // 0) 현재 서버에 저장된 블록 목록 조회 및 정리
+      pushLog(`프로젝트(${PROJECT_ID})의 기존 블록을 조회합니다...`);
+      const existingBlocks = await fetchJson(
+        `${API_ROOT}/api/blocks/project/${PROJECT_ID}`
+      );
+
+      const existingList = Array.isArray(existingBlocks) ? existingBlocks : [];
+      pushLog(`✅ 서버에 ${existingList.length}개의 블록이 있습니다.`);
+
+      if (existingList.length > 0) {
+        pushLog("이전 블록을 삭제하여 프로젝트 상태를 초기화합니다...");
+        for (const block of existingList) {
+          const blockId = block?.id ?? block?.blockId;
+          if (blockId == null) continue;
+
+          await fetchJson(`${API_ROOT}/api/blocks/${blockId}`, {
+            method: "DELETE",
+          });
+        }
+        pushLog("✅ 기존 블록 삭제 완료");
+      }
+
       // 1) 생성(POST) - 링크는 일단 null로
       pushLog(`서버에 블록을 생성합니다... (project=${PROJECT_ID})`);
       const localToServerId = new Map();
