@@ -1,57 +1,71 @@
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
+/* 최상위 layout*/
 .app-root {
-  height: 100vh;
+  height: 100vh;              
   display: flex;
   flex-direction: column;
-  background: #ffffff;         
+  background: #ffffff;
   padding: 20px;
   box-sizing: border-box;
+
+  min-height: 0;               
 }
 
 
-.app-inner {
-  flex: 1;
-  background: #fff;
-  border-radius: 8px;
-}
-
-
+/* 3) 위쪽(에디터 + 팔레트) */
 .top-row {
-  flex: 2;                   
+  flex: 1;                     
   display: flex;
   gap: 16px;
   margin-bottom: 16px;
+
+  min-height: 0;              
 }
 
-/* 블록 편집 공간 */
+/* 4) 에디터 영역 */
 .edit-area {
-  flex: 1; /* 남은 너비 모두 차지 */
+  flex: 1;
+  min-width: 0;               
+  min-height: 0;              
+
   background-color: #e0e0e0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-  color: #555;
-  position: relative; /* 나중에 블록 드래그할 때 기준점 */
+  border: 1px solid #ccc;     
+  border-radius: 8px;         
+  position: relative;
+
+  display: block;            
+  overflow: hidden;           
 }
 
-/* 블록 출력 공간 */
-.output-area {
-  height: 250px; /* 높이 고정 */
-  background-color: #e0e0e0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #333;
-  border-top: 1px solid #ccc;
-}
-
-/* 아래 블록 팔레트 공간 */
+/* 5) 팔레트 영역(오른쪽) */
 .bottom-row {
-  width: 300px; /* 너비 고정 */
+  width: 300px;
+  flex: 0 0 300px;            
+  min-height: 0;             
+
   border-left: 1px solid #ddd;
   background-color: #e0e0e0;
+  border-radius: 8px;         
+  overflow: auto;             
   display: flex;
   flex-direction: column;
 }
+
+/* 6) 출력 영역(아래) */
+.output-area {
+  height: 250px;
+  background-color: #e0e0e0;
+  border-top: 1px solid #ccc;
+
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+
+  padding: 10px;
+  box-sizing: border-box;
+}
+

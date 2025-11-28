@@ -1,6 +1,10 @@
 .run-root {
   width: 100%;
   height: 100%;
+  flex: 1;              /* ✅ 추가: output-area 내부에서 남는 공간 전부 먹기 */
+  min-height: 0;
+  min-width: 0;
+
   background: #dcdcdc;
   display: flex;
   flex-direction: column;
@@ -8,6 +12,7 @@
   gap: 8px;
   box-sizing: border-box;
 }
+
 
 .run-controls {
   display: flex;
@@ -42,6 +47,7 @@
 }
 
 .run-console {
+  width: 100%;
   flex: 1;
   background: #454545;
   color: #f1f1f1;
@@ -71,3 +77,18 @@
 .run-console-line + .run-console-line {
   margin-top: 3px;
 }
+
+.run-root {
+  width: 100%;
+  height: 100%;
+  background: #dcdcdc;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 10px;
+  gap: 8px;
+  box-sizing: border-box;
+
+  min-height: 0;     /* 추가 */
+  min-width: 0;      /* 추가 */
+}
+
