@@ -11,6 +11,11 @@ export function BlockEditorPane({
   
   variables = [], 
   onVarChange,
+  onOpChange,
+  onValueEditStart,
+  onValueEditCommit,
+  onValueEditCancel,
+  editingValueId,
 }) {
   return (
     <div
@@ -26,11 +31,11 @@ export function BlockEditorPane({
       }}
     >
       <svg width="100%" height="100%">
-        {blocks.map((block) => {
+        {blocks.map((block, idx) => {
           const isHidden = hiddenIds.includes(block.id);
 
           return (
-            <g key={block.id} style={{ opacity: isHidden ? 0 : 1 }}>
+            <g key={block.id} style={{ opacity: isHidden ? 0 : 1 }} data-z={idx}>
               <Block
                 {...block}
                 onMouseDown={onBlockDown}
@@ -39,6 +44,11 @@ export function BlockEditorPane({
                 // ★ [NEW] Block에게 전달
                 variables={variables}
                 onVarChange={onVarChange}
+                onOpChange={onOpChange}
+                onValueEditStart={onValueEditStart}
+                onValueEditCommit={onValueEditCommit}
+                onValueEditCancel={onValueEditCancel}
+                isEditingValue={editingValueId === block.id}
               />
             </g>
           );
